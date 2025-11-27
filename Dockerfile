@@ -1,12 +1,14 @@
-FROM nginx
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-WORKDIR /user/share/nginx/html/
-USER root
-
-COPY ./docker/nginx.conf /etc/nginx/conf.d/default.conf
-COPY ./dist /user/share/nginx/html/
-
+FROM nginx:alpine
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+RUN rm -rf /usr/share/nginx/html/*
+COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]
 
