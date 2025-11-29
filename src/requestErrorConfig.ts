@@ -90,7 +90,7 @@ export const errorConfig: RequestConfig = {
     (config: RequestOptions) => {
       // 拦截请求配置，进行个性化处理。
       const u = config?.url || '';
-      const url = u.includes('?') ? `${u}&token=123` : `${u}?token=123`;
+      const url = u.includes('?') ? `${u}` : `${u}`;
       return { ...config, url };
     },
   ],
