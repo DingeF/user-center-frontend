@@ -55,7 +55,10 @@ export async function register(body: API.LoginParams, options?: { [key: string]:
  */
 export async function queryUserList(options?: { [key: string]: any }) {
   return request<API.BaseResponse<API.CurrentUser[]>>('/user/query',{
-    method:'GET',
+    method:'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
     ...(options || {}),
   })
 }

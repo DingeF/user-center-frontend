@@ -4,7 +4,7 @@ import type {ActionType, ProColumns} from '@ant-design/pro-components';
 import {ProTable, TableDropdown} from '@ant-design/pro-components';
 import {Button, Dropdown, Space, Tag, Image} from 'antd';
 import {useRef} from 'react';
-import {queryUserList} from "@/services/ant-design-pro/api";
+import {queryUserList, queryUserListByAccount} from "@/services/ant-design-pro/api";
 
 export const waitTimePromise = async (time: number = 100) => {
   return new Promise((resolve) => {
@@ -20,6 +20,7 @@ export const waitTime = async (time: number = 100) => {
 
 const columns: ProColumns<API.CurrentUser>[] = [
   {
+    title:'序号',
     dataIndex: 'id',  // dataIndex:将表格列名与数据库字段名匹配上即可
     valueType: 'indexBorder',
     width: 48,
@@ -116,7 +117,6 @@ const columns: ProColumns<API.CurrentUser>[] = [
   },
   {
     title: '创建时间',
-    key: 'showTime',
     dataIndex: 'createTime',
     valueType: 'date',
     sorter: true,
@@ -124,14 +124,14 @@ const columns: ProColumns<API.CurrentUser>[] = [
   },
   {
     title: '创建时间',
-    dataIndex: 'createTime',
+    dataIndex: 'createTimeRange',
     valueType: 'dateRange',
     hideInTable: true,
     search: {
       transform: (value) => {
         return {
-          startTime: value[0],
-          endTime: value[1],
+          startTime: value?.[0],
+          endTime: value?.[1],
         };
       },
     },
@@ -173,10 +173,36 @@ export default () => {
       cardBordered
       request={async (params, sort, filter) => {
         await waitTime(200);
-        const res = await queryUserList();
+        const cleanParams: Record<string, any> = {};
+        Object.entries(params || {}).forEach(([key, value]) => {
+          if (
+            key !== 'current' &&
+            key !== 'pageSize' &&
+            value !== undefined &&
+            value !== null &&
+            value !== '' &&
+            !(Array.isArray(value) && value.length === 0)
+          ) {
+            cleanParams[key] = value;
+          }
+        });
+        // 排序映射（前端白名单）：只允许指定字段与顺序
+        const allowedSortFields = ['id','createTime'];
+        const allowedOrders = ['ascend','descend'];
+        Object.entries(sort || {}).some(([field, order]) => {
+          if (order && allowedSortFields.includes(field) && allowedOrders.includes(order as any)) {
+            cleanParams.sortField = field;
+            cleanParams.sortOrder = order === 'ascend' ? 'asc' : 'desc';
+            return true;
+          }
+          return false;
+        });
+        const res = await queryUserList({ data: cleanParams });
+        const list: API.CurrentUser[] = res?.data ?? [];
         return {
-          data: res.data,
+          data: list,
           success: true,
+          total: list.length,
         };
       }}
       editable={{
@@ -207,7 +233,7 @@ export default () => {
           if (type === 'get') {
             return {
               ...values,
-              created_at: [values.startTime, values.endTime],
+              // created_at: [values.startTime, values.endTime],
             };
           }
           return values;
