@@ -63,6 +63,36 @@ export async function queryUserList(options?: { [key: string]: any }) {
   })
 }
 
+/** 更新用户信息
+ * POST
+ * /api/user/update
+ * */
+export async function updateUser(body: Partial<API.CurrentUser>, options?: { [key: string]: any }) {
+  return request<API.BaseResponse<boolean>>('/user/update', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** 删除用户
+ * POST
+ * /api/user/delete
+ * */
+export async function deleteUser(id: number | string, options?: { [key: string]: any }) {
+  return request<API.BaseResponse<boolean>>('/user/delete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: id,
+    ...(options || {}),
+  });
+}
+
 /** 此处后端没有提供注释 GET /api/notices */
 export async function getNotices(options?: { [key: string]: any }) {
   return request<API.NoticeIconList>('/api/notices', {

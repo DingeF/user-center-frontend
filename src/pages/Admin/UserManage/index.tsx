@@ -4,7 +4,7 @@ import type {ActionType, ProColumns} from '@ant-design/pro-components';
 import {ProTable, TableDropdown} from '@ant-design/pro-components';
 import {Button, Dropdown, Space, Tag, Image} from 'antd';
 import {useRef} from 'react';
-import {queryUserList, queryUserListByAccount} from "@/services/ant-design-pro/api";
+import {queryUserList, updateUser, deleteUser} from "@/services/ant-design-pro/api";
 
 export const waitTimePromise = async (time: number = 100) => {
   return new Promise((resolve) => {
@@ -21,9 +21,10 @@ export const waitTime = async (time: number = 100) => {
 const columns: ProColumns<API.CurrentUser>[] = [
   {
     title:'序号',
-    dataIndex: 'id',  // dataIndex:将表格列名与数据库字段名匹配上即可
+    dataIndex: 'index',
     valueType: 'indexBorder',
     width: 48,
+    editable: false,
   },
   {
     title: '用户账户',
@@ -87,9 +88,13 @@ const columns: ProColumns<API.CurrentUser>[] = [
     dataIndex: 'userRole',
     search: true,
     valueType:"select",
+    valueEnum: {
+      0: { text: '普通用户', status: 'Default' },
+      1: { text: '管理员', status: 'Success' },
+    },
     fieldProps: {
       options: [
-        {label:"普通用户",value:"0"},
+        {label:"普通用户",value:0},
         {
           label: (
             <span>
@@ -106,7 +111,7 @@ const columns: ProColumns<API.CurrentUser>[] = [
               管理员
             </span>
           ),
-          value:"1"
+          value:1
         },
       ]
     },
@@ -123,20 +128,6 @@ const columns: ProColumns<API.CurrentUser>[] = [
     hideInSearch: true,
   },
   {
-    title: '创建时间',
-    dataIndex: 'createTimeRange',
-    valueType: 'dateRange',
-    hideInTable: true,
-    search: {
-      transform: (value) => {
-        return {
-          startTime: value?.[0],
-          endTime: value?.[1],
-        };
-      },
-    },
-  },
-  {
     title: '操作',
     valueType: 'option',
     key: 'option',
@@ -148,9 +139,6 @@ const columns: ProColumns<API.CurrentUser>[] = [
         }}
       >
         编辑
-      </a>,
-      <a href={record.url} target="_blank" rel="noopener noreferrer" key="view">
-        查看
       </a>,
       <TableDropdown
         key="actionGroup"
@@ -207,6 +195,16 @@ export default () => {
       }}
       editable={{
         type: 'multiple',
+        onSave: async (key, row, originRow) => {
+          await updateUser({ ...row, id: key as any, userRole: Number(row.userRole) });
+          actionRef.current?.reloadAndRest?.();
+          return true;
+        },
+        onDelete: async (key, row) => {
+          await deleteUser(key as any);
+          actionRef.current?.reloadAndRest?.();
+          return true;
+        },
       }}
       columnsState={{
         persistenceKey: 'pro-table-singe-demos',

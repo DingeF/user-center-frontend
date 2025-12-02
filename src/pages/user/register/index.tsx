@@ -11,6 +11,7 @@ import {
 import {
   LoginForm,
   ProFormText,
+  ProFormUploadButton,
 } from '@ant-design/pro-components';
 import { Helmet, history } from '@umijs/max';
 import {Alert, App, Button, Space, Tabs} from 'antd';
